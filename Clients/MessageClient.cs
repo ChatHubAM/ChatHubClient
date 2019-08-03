@@ -23,6 +23,7 @@ namespace ChatHubWPF
             HttpResponseMessage responseMessage;
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.SetBearerToken(Token);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
                     Content = new StringContent(JsonConvert.SerializeObject(message), UnicodeEncoding.UTF8, "application/json")
@@ -38,6 +39,7 @@ namespace ChatHubWPF
             HttpResponseMessage responseMessage;
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.SetBearerToken(Token);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
                     Content = new StringContent(JsonConvert.SerializeObject(notif), UnicodeEncoding.UTF8, "application/json")
@@ -55,6 +57,7 @@ namespace ChatHubWPF
             HttpResponseMessage responseMessage;
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.SetBearerToken(Token);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
                     Content = new StringContent(JsonConvert.SerializeObject(notif), UnicodeEncoding.UTF8, "application/json")
@@ -70,6 +73,7 @@ namespace ChatHubWPF
             HttpResponseMessage responseMessage;
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.SetBearerToken(Token);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
                     Content = new StringContent(JsonConvert.SerializeObject(notif), UnicodeEncoding.UTF8, "application/json")
@@ -80,19 +84,19 @@ namespace ChatHubWPF
             return JsonConvert.DeserializeObject<IEnumerable<Message>>(unreadMessage);
         }
 
-        public async Task<IEnumerable<Message>> GetAllUnreadMessages()
-        {
-            string uri = "http://192.168.0.10:5003/api/message/allunread";
+        //public async Task<IEnumerable<Message>> GetAllUnreadMessages()
+        //{
+        //    string uri = "http://192.168.0.10:5003/api/message/allunread";
 
-            HttpResponseMessage responseMessage;
-            using (HttpClient httpClient = new HttpClient())
-            {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
-                responseMessage = await httpClient.SendAsync(request);
-            }
-            var ureadMessages = await responseMessage.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<IEnumerable<Message>>(ureadMessages);
-        }
-
+        //    HttpResponseMessage responseMessage;
+        //    using (HttpClient httpClient = new HttpClient())
+        //    {
+        //        httpClient.SetBearerToken(Token);
+        //        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+        //        responseMessage = await httpClient.SendAsync(request);
+        //    }
+        //    var ureadMessages = await responseMessage.Content.ReadAsStringAsync();
+        //    return JsonConvert.DeserializeObject<IEnumerable<Message>>(ureadMessages);
+        //}
     }
 }

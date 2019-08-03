@@ -22,6 +22,7 @@ namespace ChatHubWPF
             HttpResponseMessage responseMessage;
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.SetBearerToken(token);
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
                 responseMessage = await httpClient.SendAsync(request);
             }

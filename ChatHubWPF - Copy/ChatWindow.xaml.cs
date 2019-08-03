@@ -32,12 +32,6 @@ namespace ChatHubWPF
         List<ActiveUserInfo> Contacts { get; set; } = new List<ActiveUserInfo>(); 
         public string AccessToken { get; set; }
 
-        IEnumerable<Message> AllUnreadMessages { get; set; }
-
-        //static string messageapi = "http://localhost:51591/api/values";
-        //static string Username;
-        //static string Name;
-        //static List<object> oldList = new List<object>();
         public ChatWindow(string UserName)
         { 
             string currentPath = Environment.CurrentDirectory + "\\token.txt";
@@ -47,32 +41,10 @@ namespace ChatHubWPF
 
             Username = UserName;
             InitializeComponent();
-
-            //MessageClient messageClient = new MessageClient(accessTokenDeserialised.access_token);
-            //foreach (var contact in RadGridView.Items)
-            //{
-            //    MessageToFrom messageNotif = new MessageToFrom();
-            //    messageNotif.To = Username;
-            //    messageNotif.From = contact.ToString();
-            //    var unreadMessages = messageClient.UnreadMessages(messageNotif);
-            //}
         }
-            //oldList.Add("Vzgo");
-            //oldList.Add("Tigran");
-            //oldList.Add("Suren");
-            //oldList.Add("Areg");
-            //oldList.Add("Narek");
-            //oldList.Add("Arthur");
-            //foreach (var item in oldList)
-            //{
-            //    RadGridView.Items.Add(item);
-            //}
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             NameUser.Content = Username;
-            string currentPath = Environment.CurrentDirectory + "\\token.txt";
-            string accesstoken = File.ReadAllText(currentPath);
-            var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
 
             ActiveUserClient activeUsers = new ActiveUserClient();
             var activeUserInfo = await activeUsers.ActiveUsers(AccessToken);
@@ -86,54 +58,20 @@ namespace ChatHubWPF
                     ContactsList.Items.Add(user.Username);
                 }
             }
-            //RadGridView.ItemsSource = Contacts.Select(cont => cont.Username);
 
             var dueTime = TimeSpan.FromSeconds(1);
             var interval = TimeSpan.FromSeconds(1);
             await CallAPIPeriodicAsync(CallingAPIs, dueTime, interval, CancellationToken.None);
-
-            // MessageToFrom messageNotif = new MessageToFrom();
-            // messageNotif.From = Username;
-            // messageNotif.To = RadGridView.SelectedItem.ToString();
-            // MessageClient readMessages = new MessageClient(accessTokenDeserialised.access_token);
-            // var messages = readMessages.ReadAllMessages(messageNotif)
-
-
-
-            //// ActiveUserClient activeUser = new ActiveUserClient();
-            //HttpClient client = new HttpClient();
-            ////Post client
-            //var Json = JsonConvert.SerializeObject(Name);
-            //var httpContent = new StringContent(Json, Encoding.UTF8, "application/json");
-            //await client.PostAsync(messageapi+"/onlineusers/add/"+Name, httpContent);
-            ////post client
-
-            //while (true)
-            //{
-            //    var response = client.GetAsync(messageapi + "/onlineusers");//.Result.Content.ReadAsStringAsync().Result;
-            //    var jsonresult = response.Result.Content.ReadAsStringAsync().Result;
-            //    var result = JsonConvert.DeserializeObject<List<UsersFromTo>>(jsonresult);
-            //    foreach (var item in result)
-            //    {
-            //        RadGridView.Items.Add(item.From);
-            //    }
-
-            //    Thread.Sleep(5000);
-            //}
         }
 
         private async void CallingAPIs()
         {
-            string currentPath = Environment.CurrentDirectory + "\\token.txt";
-            string accesstoken = File.ReadAllText(currentPath);
-            var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
-
             MessageClient messageClient = new MessageClient(AccessToken);
 
-            AllUnreadMessages = await messageClient.GetAllUnreadMessages();
-
-            MessageToFrom messageNotif = new MessageToFrom();
-            messageNotif.To = Username;
+            MessageToFrom messageNotif = new MessageToFrom
+            {
+                To = Username
+            };
 
             for (int i = 0; i < Contacts.Count(); i++)
             {
@@ -155,13 +93,13 @@ namespace ChatHubWPF
 
         private void MessageTextbox_MouseEnter(object sender, MouseEventArgs e)
         {
-            if(MessageTextbox.Text== "Type your message here...")
+            if(MessageTextbox.Text == "Type your message here...")
             MessageTextbox.Text = "";
         }
 
         private void MessageTextbox_MouseLeave(object sender, MouseEventArgs e)
         {
-            if(MessageTextbox.Text=="")
+            if(MessageTextbox.Text == "")
             MessageTextbox.Text = "Type your message here...";
         }
         private void Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -175,48 +113,47 @@ namespace ChatHubWPF
 
         private async void MessageTextBoxKeyDown(object sender, KeyEventArgs e)
         {
-        
+            if ((MessageTextbox.Text == "") || (MessageTextbox.Text == "Type your message here...") || e.Key != Key.Enter)
+                return;
 
-            //if (MessageTextbox.Text == "Type your message here...") MessageTextbox.Text = "";
-            //if (e.Key == Key.Enter)
-            //{
-            //    if (MessageTextbox.Text == "") return;
-            //    //Call sendMessageService
-            //    HttpClient client = new HttpClient();
-            //    //Post client
-            //    Message message = new Message(Username, RadGridView.SelectedItem.ToString(), MessageTextbox.Text, false);
-            //    var Json = JsonConvert.SerializeObject(message);
-            //    var httpContent = new StringContent(Json, Encoding.UTF8, "application/json");
-            //    await client.PostAsync(messageapi, httpContent);
-            //    //post client
-            //    //Call sendMessageService
+            MessageClient messageClient = new MessageClient(AccessToken);
+            Message newMessage = new Message
+            {
+                MessageText = MessageTextbox.Text,
+                From = Username
+            };
 
-            //    var response = client.GetAsync(string.Format("{0}/{1}/{2}", messageapi,Username, RadGridView.SelectedItem.ToString()));//.Result.Content.ReadAsStringAsync().Result;
-            //    var jsonresult = response.Result.Content.ReadAsStringAsync().Result;
-            //    var result = JsonConvert.DeserializeObject<List<Message>>(jsonresult);
+            foreach (var contact in Contacts)
+            {
+                if (ContactsList.SelectedItem.ToString().Contains(contact.Username))
+                {
+                    newMessage.To = contact.Username;
+                }
+            }
 
-            //    foreach (var item in result)
-            //    {
-            //        if (!ChatMessages.Items.Contains(item.MessageText)) ChatMessages.Items.Add(item.MessageText);
-            //    }
-            //    MessageTextbox.Text = "";
-            //}
+            var isSent = await messageClient.SendMessage(newMessage);
+
+            if (isSent)
+            {
+                MessageTextbox.Text = string.Empty;
+                ChatMessages.Items.Add(newMessage.From + ": " + newMessage.MessageText);
+            }
         }
 
-        
 
         private async void SendMessageButtonClick(object sender, RoutedEventArgs e)
         {
-            //string currentPath = Environment.CurrentDirectory + "\\token.txt";
-            //string accesstoken = File.ReadAllText(currentPath);
-            //var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
+            if ((MessageTextbox.Text == "") || (MessageTextbox.Text == "Type your message here..."))
+                return;
 
             MessageClient messageClient = new MessageClient(AccessToken);
-            Message newMessage = new Message();
-            newMessage.MessageText = MessageTextbox.Text;
-            newMessage.From = Username;
-                
-            foreach(var contact in Contacts)
+            Message newMessage = new Message
+            {
+                MessageText = MessageTextbox.Text,
+                From = Username
+            };
+
+            foreach (var contact in Contacts)
             {
                 if(ContactsList.SelectedItem.ToString().Contains(contact.Username))
                 {
@@ -231,26 +168,6 @@ namespace ChatHubWPF
                 MessageTextbox.Text = string.Empty;
                 ChatMessages.Items.Add(newMessage.From + ": " + newMessage.MessageText);
             }
-            //if ((MessageTextbox.Text == "") || (MessageTextbox.Text == "Type your message here...")) return;
-
-            ////Call sendMessageService
-            //HttpClient client = new HttpClient();
-            ////Post client
-            //Message message = new Message(Username, RadGridView.SelectedItem.ToString(), MessageTextbox.Text, false);
-            //var Json = JsonConvert.SerializeObject(message);
-            //var httpContent = new StringContent(Json, Encoding.UTF8, "application/json");
-            //await client.PostAsync(messageapi, httpContent);
-            ////post client
-            ////Call sendMessageService
-
-            //var response = client.GetAsync(string.Format("{0}/{1}/{2}",messageapi, Username, RadGridView.SelectedItem.ToString()));//.Result.Content.ReadAsStringAsync().Result;
-            //var jsonresult = response.Result.Content.ReadAsStringAsync().Result;
-            //var result = JsonConvert.DeserializeObject<List<Message>>(jsonresult);
-
-            //foreach (var item in result)
-            //{
-            //}
-            //MessageTextbox.Text = "Type your message here...";
         }
 
 
@@ -258,15 +175,13 @@ namespace ChatHubWPF
         {
             ChatMessages.Items.Clear();
 
-            //string currentPath = Environment.CurrentDirectory + "\\token.txt";
-            //string accesstoken = File.ReadAllText(currentPath);
-            //var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
-
             ActiveUserClient activeUsers = new ActiveUserClient();
             var activeUserInfo = await activeUsers.ActiveUsers(AccessToken);
 
-            MessageToFrom message = new MessageToFrom();
-            message.To = Username;
+            MessageToFrom message = new MessageToFrom
+            {
+                To = Username
+            };
 
             MessageClient messageClient = new MessageClient(AccessToken);
 
@@ -290,17 +205,6 @@ namespace ChatHubWPF
                 ChatMessages.Items.Add(mess.From + ": " + mess.MessageText);
             }
 
-
-            //ChatMessages.Items.Clear();
-            //HttpClient client = new HttpClient();
-            //var response = client.GetAsync(string.Format("{0}/{1}/{2}", messageapi, Username, RadGridView.SelectedItem.ToString()));//.Result.Content.ReadAsStringAsync().Result;
-            //var jsonresult = response.Result.Content.ReadAsStringAsync().Result;
-            //var result = JsonConvert.DeserializeObject<List<Message>>(jsonresult);
-
-            //foreach (var item in result)
-            //{
-            //    if(!ChatMessages.Items.Contains(item.MessageText)) ChatMessages.Items.Add(item.MessageText);
-            //}
             MessageTextbox.Text = "Type your message here...";
         }
 
@@ -311,8 +215,8 @@ namespace ChatHubWPF
 
         private void EndVideoCallButtonClick(object sender, RoutedEventArgs e)
         {
-            EndVideoCallButton.IsEnabled = false;
-            StartVideoCallButton.IsEnabled = true;
+            //EndVideoCallButton.IsEnabled = false;
+            //StartVideoCallButton.IsEnabled = true;
             VideoFrame.Visibility = Visibility.Collapsed;
 
             ChatMessages.Visibility = Visibility.Visible;
@@ -323,8 +227,8 @@ namespace ChatHubWPF
         {
             //Call videoCallService
             StartVideoCallButton.IsEnabled = false;
-            EndVideoCallButton.IsEnabled = true;
-            VideoFrame.Visibility = Visibility.Visible;
+            //EndVideoCallButton.IsEnabled = true;
+            //VideoFrame.Visibility = Visibility.Visible;
             ChatMessages.Visibility = Visibility.Collapsed;
             MessageTextbox.Visibility = Visibility.Collapsed;
         }
@@ -349,53 +253,32 @@ namespace ChatHubWPF
         }
         private void SearchTexBoxTextChanged(object sender, TextChangedEventArgs e)
         {
-            //if ((SearchTexBox.Text == "")||(SearchTexBox.Text=="Search user"))
-            //{
-            //    RadGridView.Items.Clear();
-            //    foreach (var item in oldList)
-            //    {
-            //        RadGridView.Items.Add(item);
-            //    }
-            //    return;
-            //}
-            //RadGridView.Items.Clear();
-            //foreach (var item in oldList)
-            //{
-            //    if (Regex.IsMatch(item.ToString(), Regex.Escape(SearchTexBox.Text), RegexOptions.IgnoreCase))
-            //    {
-            //        RadGridView.Items.Add(item);
-            //    }
-            //}
         }
 
         private async void RadGridView_SelectionChanged(object sender, SelectionChangeEventArgs e)
         {
-            //ChatMessages.Items.Clear();
+            ChatMessages.Items.Clear();
+            
+            ActiveUserClient activeUsers = new ActiveUserClient();
+            var activeUserInfo = await activeUsers.ActiveUsers(AccessToken);
 
-            //string currentPath = Environment.CurrentDirectory + "\\token.txt";
-            //string accesstoken = File.ReadAllText(currentPath);
-            //var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
+            MessageToFrom message = new MessageToFrom();
+            message.To = Username;
 
-            //ActiveUserClient activeUsers = new ActiveUserClient();
-            //var activeUserInfo = await activeUsers.ActiveUsers(accessTokenDeserialised.access_token);
+            foreach (var contact in activeUserInfo)
+            {
+                if (contact.Username.Contains(ContactsList.SelectedItem.ToString()))
+                {
+                    message.From = contact.Username;
+                }
+            }
 
-            //MessageToFrom message = new MessageToFrom();
-            //message.To = Username;
-
-            //foreach (var contact in activeUserInfo)
-            //{
-            //    if (contact.Username.Contains(RadGridView1.SelectedItem.ToString()))
-            //    {
-            //        message.To = contact.Username;
-            //    }
-            //}
-
-            //MessageClient messageClient = new MessageClient(accessTokenDeserialised.access_token);
-            //var messages = await messageClient.ReadAllMessages(message);
-            //foreach (var mess in messages)
-            //{
-            //    ChatMessages.Items.Add(mess.From + ": " + mess.MessageText);
-            //}
+            MessageClient messageClient = new MessageClient(AccessToken);
+            var messages = await messageClient.ReadAllMessages(message);
+            foreach (var mess in messages)
+            {
+                ChatMessages.Items.Add(mess.From + ": " + mess.MessageText);
+            }
         }
 
         private void ChatMessages_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -424,4 +307,4 @@ namespace ChatHubWPF
             }
         }
     }
-}
+}   
