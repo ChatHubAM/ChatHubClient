@@ -18,26 +18,24 @@ using ChatHubWPF.Clients;
 using Newtonsoft.Json;
 using System.IO;
 using Clients;
-using Telerik.WinControls.Data;
-using ChatHubWPF.Models;
 
 namespace ChatHubWPF
 {
     /// <summary>
-    /// Interaction logic for Window1.xaml
+    /// Interaction logic for ChatWindow
     /// </summary>
     public partial class ChatWindow : Window
     {
         public string Username { get; }
-        List<ActiveUserInfo> Contacts { get; set; } = new List<ActiveUserInfo>(); 
-        public string AccessToken { get; set; }
+        List<ActiveUserInfo> Contacts { get; set; } = new List<ActiveUserInfo>();  //online users list
+        public string AccessToken { get; set; } //getting the access token for all clients
 
         public ChatWindow(string UserName)
         { 
             string currentPath = Environment.CurrentDirectory + "\\token.txt";
             string accesstoken = File.ReadAllText(currentPath);
-            var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken);
-            AccessToken = accessTokenDeserialised.access_token;
+            var accessTokenDeserialised = JsonConvert.DeserializeObject<AuthServerResponse>(accesstoken); //desearilize token
+            AccessToken = accessTokenDeserialised.access_token; //access token
 
             Username = UserName;
             InitializeComponent();
@@ -61,7 +59,9 @@ namespace ChatHubWPF
 
             var dueTime = TimeSpan.FromSeconds(1);
             var interval = TimeSpan.FromSeconds(1);
-            await CallAPIPeriodicAsync(CallingAPIs, dueTime, interval, CancellationToken.None);
+
+            //calling API's continuosly
+            await CallAPIPeriodicAsync(CallingAPIs, dueTime, interval, CancellationToken.None); 
         }
 
         private async void CallingAPIs()
@@ -78,12 +78,13 @@ namespace ChatHubWPF
                 if (Contacts[i] != null)
                 {
                     messageNotif.From = Contacts[i].Username;
-                    var unreadMessages = await messageClient.UnreadMessages(messageNotif);
+                    var unreadMessages = await messageClient.UnreadMessages(messageNotif); //getting unread massages
+
                     if (unreadMessages != null && unreadMessages.Count() != 0)
                     {
-                        ContactsList.Items[i] = Contacts[i].Username + " (" + unreadMessages.Count() + ")";
+                        ContactsList.Items[i] = Contacts[i].Username + " (" + unreadMessages.Count() + ")"; //checking the contact name
                     }
-                    if(unreadMessages.Count() == 0)
+                    if(unreadMessages.Count() == 0) //if no unread messages, do nothing
                     {
                         ContactsList.Items[i] = Contacts[i].Username;
                     }
@@ -127,11 +128,11 @@ namespace ChatHubWPF
             {
                 if (ContactsList.SelectedItem.ToString().Contains(contact.Username))
                 {
-                    newMessage.To = contact.Username;
+                    newMessage.To = contact.Username; //checking whom you are sending a message
                 }
             }
 
-            var isSent = await messageClient.SendMessage(newMessage);
+            var isSent = await messageClient.SendMessage(newMessage); //sending a message
 
             if (isSent)
             {
@@ -157,11 +158,11 @@ namespace ChatHubWPF
             {
                 if(ContactsList.SelectedItem.ToString().Contains(contact.Username))
                 {
-                    newMessage.To = contact.Username;
+                    newMessage.To = contact.Username; //checking the contact name
                 }
             }
 
-            var isSent = await messageClient.SendMessage(newMessage);
+            var isSent = await messageClient.SendMessage(newMessage); //sending a message
 
             if (isSent)
             {
@@ -176,7 +177,7 @@ namespace ChatHubWPF
             ChatMessages.Items.Clear();
 
             ActiveUserClient activeUsers = new ActiveUserClient();
-            var activeUserInfo = await activeUsers.ActiveUsers(AccessToken);
+            var activeUserInfo = await activeUsers.ActiveUsers(AccessToken); //giving client and access token
 
             MessageToFrom message = new MessageToFrom
             {
@@ -197,12 +198,12 @@ namespace ChatHubWPF
                 }
             }
 
-            var messages = await messageClient.ReadAllMessages(message);
+            var messages = await messageClient.ReadAllMessages(message); //reading all messages with this contact
 
 
             foreach (var mess in messages)
             {
-                ChatMessages.Items.Add(mess.From + ": " + mess.MessageText);
+                ChatMessages.Items.Add(mess.From + ": " + mess.MessageText); // adding all messages to a messageItems
             }
 
             MessageTextbox.Text = "Type your message here...";
@@ -257,7 +258,7 @@ namespace ChatHubWPF
 
         private async void RadGridView_SelectionChanged(object sender, SelectionChangeEventArgs e)
         {
-            ChatMessages.Items.Clear();
+            ChatMessages.Items.Clear(); //deleting all messages in a UI
             
             ActiveUserClient activeUsers = new ActiveUserClient();
             var activeUserInfo = await activeUsers.ActiveUsers(AccessToken);
@@ -269,15 +270,15 @@ namespace ChatHubWPF
             {
                 if (contact.Username.Contains(ContactsList.SelectedItem.ToString()))
                 {
-                    message.From = contact.Username;
+                    message.From = contact.Username; //checking the contact name
                 }
             }
 
             MessageClient messageClient = new MessageClient(AccessToken);
-            var messages = await messageClient.ReadAllMessages(message);
+            var messages = await messageClient.ReadAllMessages(message); //getting all messages
             foreach (var mess in messages)
             {
-                ChatMessages.Items.Add(mess.From + ": " + mess.MessageText);
+                ChatMessages.Items.Add(mess.From + ": " + mess.MessageText); 
             }
         }
 

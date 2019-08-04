@@ -72,6 +72,11 @@ namespace ChatHubWPF
             LoginButton.IsEnabled = true;
         }
 
+        /// <summary>
+        /// Clicked Registration button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void  RegistrationButtonClick(object sender, RoutedEventArgs e)
         {
             RegistrationButton.IsEnabled = false;

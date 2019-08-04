@@ -1,9 +1,7 @@
 ﻿using ChatHubWPF.Clients;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,6 +45,7 @@ namespace ChatHubWPF
                 responseMessage = await httpClient.SendAsync(request);
             }
             var allMessages = await responseMessage.Content.ReadAsStringAsync();
+
             return JsonConvert.DeserializeObject<IEnumerable<Message>>(allMessages);
         }
 
